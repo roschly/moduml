@@ -1,0 +1,4 @@
+astroid
+networkx
+pydot
+matplotlib
