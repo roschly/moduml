@@ -1,4 +1,3 @@
 astroid
 networkx
 pydot
-matplotlib
