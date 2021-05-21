@@ -51,13 +51,15 @@ class FileLayout(pydot.Node):
     def __init__(self, 
                  node: Path, 
                  with_interface: bool,
+                 full_filepath: bool,
                  show_class_bases: bool = False,
                  show_func_decorators: bool = False,
                  show_func_return_type: bool = False
                  ) -> None:
         super().__init__(name=node.as_posix())
         self.set("shape", "record")
-        filename = node.relative_to(node.parent).as_posix()
+        filename = node.as_posix() if full_filepath else node.relative_to(node.parent).as_posix()
+        
         if with_interface:
             mod_int: ModuleInterface = interface.get_module_interface(module_path=node)
             cs: List[str] = self._class_definition_style(class_defs=mod_int.class_defs, 
