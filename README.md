@@ -35,6 +35,8 @@ moduml applied to itself:
 - ~~'no directories'-view ('dir-as empty'), only files (with imports as only links) and fully qualified file names.~~
 - add a couple of sensible default views, that ignores other specific args (or just overwrites the ones it uses), e.g. interface-view (dir-as node, only hiearchy imports, show-interface)
 - option to remove/not-draw nodes with no edges/links.
+- consider option for defining the number of parents to show in "full"-filepath, e.g. (path/to/file.py) --> to/file.py
+- consider option for combining multiple files into one (based on glob pattern?), in order to simplify layout (reduce number of edges).
 - consider coloring schemes for showing dir hierarchies and import links, e.g. top-level files have different kinds of red and their import links share the source node color.
 - streamlit app for exploring moduml's own source code (hosted as a streamlit share service).
 - config file for style definitions, e.g. color schemes, node shapes, etc.
