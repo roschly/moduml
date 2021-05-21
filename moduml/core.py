@@ -1,9 +1,8 @@
 
 import argparse
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List
 
-import astroid
 import pydot
 import networkx as nx
 
