@@ -21,3 +21,10 @@ Similarly to the intended role of UML diagrams in static languages, moduml is in
 
 ## How-to-use
 ``moduml <dir> [options]``
+
+## Todos
+- streamlit app for exploring moduml's own source code (hosted as a streamlit share service).
+- config file for style definitions, e.g. color schemes, node shapes, etc.
+- replace paths2graph with network_creator script
+
+
