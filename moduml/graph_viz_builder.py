@@ -140,7 +140,10 @@ def build_dot_layout(g: nx.DiGraph,
                      show_interface: bool = False,
                      show_imports: bool = False
                      ) -> pydot.Dot:
-    builder = GraphVizBuilder(path_graph=g, project_path=project_path)
+    builder = GraphVizBuilder(path_graph=g, 
+                              project_path=project_path,
+                              rankdir=ARGS.rankdir
+                              )
     builder.add_file_nodes(with_interface=show_interface)
 
     if dir_as == "node":
