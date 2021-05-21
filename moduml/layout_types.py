@@ -23,12 +23,11 @@ def _is_package(graph: nx.DiGraph, node: Path) -> bool:
 class EdgeLayout(pydot.Edge):
     """ Dot layout for an edge.
     """
-    def __init__(self, src: Path, dst: Path) -> None:
+    def __init__(self, src: Path, dst: Path, **kwargs) -> None:
         super().__init__(
             src=pydot.Node(src.as_posix()), 
             dst=pydot.Node(dst.as_posix()),
-            color="gray",
-            style="solid"
+            **kwargs
             )
 
 

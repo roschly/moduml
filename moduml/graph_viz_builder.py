@@ -110,29 +110,22 @@ class GraphVizBuilder:
     def add_hierarchy_links(self) -> None:
         for n in self.g.nodes:
             for s in self.g.successors(n):
-                edge = EdgeLayout(src=n, dst=s)
+                edge = EdgeLayout(src=n, dst=s, color="gray", style="solid")
                 self._graph.add_edge(edge)
-
+            
     def add_import_links(self) -> None:
         for n in self.file_nodes:
             module_ast = _parse_python_file(n)
             internal_imports, _ = get_module_imports(module_path=n, module_ast=module_ast, project_path=self.project_path)
             for int_imp in internal_imports:
-                edge = pydot.Edge(
-                    src=pydot.Node(n.as_posix()), 
-                    dst=pydot.Node(int_imp.as_posix()),
-                    color=ARGS.import_link_color,
-                    style="dashed"
-                )
+                edge = EdgeLayout(src=n, 
+                                  dst=int_imp, 
+                                  color="black", 
+                                  style="dashed", 
+                                  constraint=(not ARGS.ignore_imports)
+                                  )
                 self._graph.add_edge(edge)
 
-    def add_hightlight(self) -> None:
-        n: pydot.Node
-        for n in self._graph.get_node_list():
-            print(n.get_name())
-            n.set_style("filled")
-            n.set_fillcolor("green")
-        
 
 def build_dot_layout(g: nx.DiGraph, 
                      project_path: Path, 
