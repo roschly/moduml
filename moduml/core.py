@@ -20,12 +20,12 @@ def main():
     # layout components
     parser.add_argument("--show-interface", action="store_true", help="Show interface (var + function names) on file nodes.")
     parser.add_argument("--show-imports", action="store_true", help="Show import links between files.")
+    parser.add_argument("--ignore-imports", action="store_true", help="Import links won't affect graph layout.")
     parser.add_argument("--show-class-bases", action="store_true", help="Show the base classes for a class.")
     parser.add_argument("--show-func-return-type", action="store_true", help="Show the return type of a function.")
     parser.add_argument("--show-func-decorators", action="store_true", help="Show the decorators of a function.")
     # styling
     parser.add_argument("--rankdir", type=str, default="TB", help="Layout ordering for graph: 'TB' top-bottom (default), 'LR' left-right. OBS! 'LR' changes the interface layout.")
-    parser.add_argument("--import-link-color", type=str, default="black", help="Color of import link, e.g. 'black', 'gray', 'royalblue'. See options: https://www.graphviz.org/doc/info/colors.html")
     args = parser.parse_args()
 
     # Make args available to the graph_viz_builder module.
