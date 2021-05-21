@@ -29,7 +29,12 @@ moduml applied to itself:
 
 
 ## Todos
+- use "concentrate" to merge multiple edges together. Maybe as option, maybe as permanent setting.
+- option for change between the two possible 'rankdir' settings: 'TB' (top-bottom), 'LR' (left-right). OBS! explain that it screws with the interface layout
+- add (maybe as option) 'constraint' to import links in 'dir-as node' view, causing the tree hiearchy between folders and files to be preserved.
+- 'no directories'-view ('dir-as removed'), only files (with imports as only links) and fully qualified file names.
+- add a couple of sensible default views, that ignores other specific args (or just overwrites the ones it uses), e.g. interface-view (dir-as node, only hiearchy imports, show-interface)
 - streamlit app for exploring moduml's own source code (hosted as a streamlit share service).
 - config file for style definitions, e.g. color schemes, node shapes, etc.
-- replace paths2graph with network_creator script
+- replace paths2graph with network_creator script.
 - ignore-files only works for files that are not imported themselves, i.e. test files (which was the intended use case).
