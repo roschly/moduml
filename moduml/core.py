@@ -14,10 +14,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="Path to directory containing python project.")
     #
-    parser.add_argument("--dir-as", type=str, default="node", help="Draw a directory as 'node' (default) or 'cluster'.")
+    parser.add_argument("--dir-as", type=str, default="node", help="Draw a directory as 'node' (default), 'cluster' or 'empty' (not drawn).")
     parser.add_argument("--output-file", type=str, help="Replace dot string output with name of image file incl. extension (e.g. img.png). Supports file formats from GraphViz (e.g. png, svg).")
-    parser.add_argument("--ignore-files", type=str, help="Glob pattern for ignoring files.")
+    parser.add_argument("--exclude-files", type=str, help="Glob pattern for excluding files.")
     # layout components
+    parser.add_argument("--full-filepath", action="store_true", help="Show filenames with their full path. Default is to only show filename.")
     parser.add_argument("--show-interface", action="store_true", help="Show interface (var + function names) on file nodes.")
     parser.add_argument("--show-imports", action="store_true", help="Show import links between files.")
     parser.add_argument("--ignore-imports", action="store_true", help="Import links won't affect graph layout.")
@@ -42,10 +43,10 @@ def main():
     filepaths: List[Path] = list(path.rglob("*.py"))
 
     # optional: ignore files pattern
-    ignore_filepaths = []
-    if args.ignore_files:
-        ignore_filepaths: List[Path] = list(path.rglob(args.ignore_files))
-    filepaths = [p for p in filepaths if p not in ignore_filepaths]
+    exclude_filepaths = []
+    if args.exclude_files:
+        exclude_filepaths: List[Path] = list(path.rglob(args.exclude_files))
+    filepaths = [p for p in filepaths if p not in exclude_filepaths]
 
     # convert filepaths to graph
     graph: nx.DiGraph = paths2graph.to_graph(paths=filepaths)

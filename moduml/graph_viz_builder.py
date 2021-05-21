@@ -7,8 +7,6 @@ import networkx as nx
 import pydot
 import astroid
 
-from .module.interface import ModuleInterface
-from .module import interface
 from .module.imports import get_module_imports
 from .layout_types import DirLayout, FileLayout, EdgeLayout
 
@@ -74,6 +72,7 @@ class GraphVizBuilder:
         for n in self.file_nodes:
             node = FileLayout(node=n, 
                               with_interface=with_interface,
+                              full_filepath=ARGS.full_filepath,
                               show_class_bases=ARGS.show_class_bases,
                               show_func_decorators=ARGS.show_func_decorators,
                               show_func_return_type=ARGS.show_func_return_type
@@ -144,6 +143,8 @@ def build_dot_layout(g: nx.DiGraph,
         builder.add_hierarchy_links()
     elif dir_as == "cluster":
         builder.add_dir_clusters()
+    elif dir_as == "empty":
+        pass
     else:
         raise ValueError(f"dir_as cannot take value: {dir_as}")
     
