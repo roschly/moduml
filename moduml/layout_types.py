@@ -8,13 +8,16 @@ import astroid
 
 from .module.interface import ModuleInterface
 from .module import interface
+from .network_creator import ModuleNetwork
 
 
-def _is_package(graph: nx.DiGraph, node: Path) -> bool:
+def _is_package(network: ModuleNetwork, node: Path) -> bool:
     """ if a node has a successor that is an __init__.py file
     """
     s: Path
-    for s in graph.successors(node):
+    n = nx.DiGraph()
+    n.add_edges_from( network.filter_links("hierarchy") )
+    for s in n.successors(node):
         if s.relative_to(node).as_posix() == "__init__.py":
             return True
     return False
@@ -35,11 +38,11 @@ class DirLayout(pydot.Node):
     """ Dot layout for a directory node.
     """
     def __init__(self, 
-                 graph: nx.DiGraph, 
+                 network: nx.DiGraph, 
                  node: Path
                  ) -> None:
         super().__init__(name=node.as_posix())
-        if _is_package(graph=graph, node=node): self.set("shape", "component")
+        if _is_package(network=network, node=node): self.set("shape", "component")
         else: self.set("shape", "folder")
         self.set("color", "red")
         self.set("label", node.relative_to(node.parent).as_posix())

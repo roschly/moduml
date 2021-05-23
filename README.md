@@ -33,6 +33,9 @@ moduml applied to itself:
 - ~~option for changing between the two possible 'rankdir' settings: 'TB' (top-bottom), 'LR' (left-right). OBS! explain that it screws with the interface layout.~~
 - ~~add (maybe as option) 'constraint' to import links in 'dir-as node' view, causing the tree hiearchy between folders and files to be preserved.~~
 - ~~'no directories'-view ('dir-as empty'), only files (with imports as only links) and fully qualified file names.~~
+- make concentrate, i.e. combine edges, an option (it combines edges of different types, i.e. hierarchy and imports)
+- add option for focusing on pattern-specified files, only showing the matched files along with their immediate neighbors (imports + hiearchy edges in both directions).
+- add option for highlightning files that import specified external packages, e.g. all files importing numpy
 - add a couple of sensible default views, that ignores other specific args (or just overwrites the ones it uses), e.g. interface-view (dir-as node, only hiearchy imports, show-interface)
 - option to remove/not-draw nodes with no edges/links.
 - consider option for defining the number of parents to show in "full"-filepath, e.g. (path/to/file.py) --> to/file.py
