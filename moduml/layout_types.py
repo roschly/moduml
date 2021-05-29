@@ -8,15 +8,15 @@ import astroid
 
 from .module.interface import ModuleInterface
 from .module import interface
-from .network_creator import ModuleNetwork
+from . import network_creator
 
 
-def _is_package(network: ModuleNetwork, node: Path) -> bool:
+def _is_package(network: nx.DiGraph, node: Path) -> bool:
     """ if a node has a successor that is an __init__.py file
     """
     s: Path
     n = nx.DiGraph()
-    n.add_edges_from( network.filter_links("hierarchy") )
+    n.add_edges_from( network_creator.filter_links(network, "hierarchy") )
     for s in n.successors(node):
         if s.relative_to(node).as_posix() == "__init__.py":
             return True

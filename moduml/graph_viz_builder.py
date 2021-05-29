@@ -9,7 +9,7 @@ import astroid
 
 from .module.imports import get_module_imports
 from .layout_types import DirLayout, FileLayout, EdgeLayout
-from .network_creator import ModuleNetwork
+from .network_creator import filter_nodes, filter_links
 
 
 # Global reference to program args, assigned from outside this module.
@@ -28,19 +28,19 @@ def _handle_weird_pydot_name(cluster_node: Path) -> str:
 
 class GraphVizBuilder:
     def __init__(self, 
-                 network: ModuleNetwork, 
+                 network: nx.DiGraph, 
                  project_path: Path, 
                  rankdir: str = "TB"
                  ) -> None:
         self.rankdir = rankdir
-        self.network: ModuleNetwork = network
+        self.network: nx.DiGraph = network
         self.project_path = project_path
 
-        self.file_nodes = network.filter_nodes("file", data=False)
-        self.dir_nodes = network.filter_nodes("dir", data=False)
+        self.file_nodes = filter_nodes(network, "file", data=False)
+        self.dir_nodes = filter_nodes(network, "dir", data=False)
         self.internal_import_links =\
-            [(src,dst) for src,dst,_ in self.network.filter_links("import") if src in self.file_nodes and dst in self.file_nodes]
-        self.hierarchy_links = self.network.filter_links("hierarchy")
+            [(src,dst) for src,dst,_ in filter_links(network, "import") if src in self.file_nodes and dst in self.file_nodes]
+        self.hierarchy_links = filter_links(network, "hierarchy")
 
         self.reset()
 

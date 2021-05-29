@@ -38,13 +38,26 @@ class ModuleNetwork(nx.DiGraph):
         return [(src,dst,attr) for src,dst,attr in self.edges(data=True) if attr["_type"] == link_type]
         
 
+def filter_nodes(network: nx.DiGraph, node_type: str, data: bool = True) -> List[Tuple[Path, Dict]]:
+    """
+    """
+    if data:
+        return [(n,attr) for n,attr in network.nodes(data=True) if attr["_type"] == node_type]
+    else:
+        return [n for n,attr in network.nodes(data=True) if attr["_type"] == node_type]
+    
+def filter_links(network: nx.DiGraph, link_type: str) -> List[Tuple[Path, Path, Dict]]:
+    """
+    """
+    return [(src,dst,attr) for src,dst,attr in network.edges(data=True) if attr["_type"] == link_type]
 
-def create(filepaths: List[Path], project_path: Path) -> ModuleNetwork:
+
+def create(filepaths: List[Path], project_path: Path) -> nx.DiGraph:
     """ Create a network/graph with file and dir nodes,
         with directory tree hierarchy links and module import links.
     """
-    # g = nx.DiGraph()
-    g = ModuleNetwork()
+    g = nx.DiGraph()
+    # g = ModuleNetwork()
 
     # add hierarchy links
     # ex: dir -(hierarchy)-> dir/subdir

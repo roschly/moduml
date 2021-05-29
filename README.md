@@ -33,6 +33,7 @@ moduml applied to itself:
 - ~~option for changing between the two possible 'rankdir' settings: 'TB' (top-bottom), 'LR' (left-right). OBS! explain that it screws with the interface layout.~~
 - ~~add (maybe as option) 'constraint' to import links in 'dir-as node' view, causing the tree hiearchy between folders and files to be preserved.~~
 - ~~'no directories'-view ('dir-as empty'), only files (with imports as only links) and fully qualified file names.~~
+- ~~replace ModuleNetwork class with basic nx.DiGraph (easier to understand). Make methods free-functions instead.~~
 - add spacing options via nodesep and ranksep
 - make concentrate, i.e. combine edges, an option (it combines edges of different types, i.e. hierarchy and imports)
 - add option for focusing on pattern-specified files, only showing the matched files along with their immediate neighbors (imports + hiearchy edges in both directions).
