@@ -6,50 +6,8 @@ import itertools
 
 import networkx as nx
 
-from .module.imports import get_module_imports
-
-
-def _parse_python_file(filepath: Path) -> astroid.Module:
-    """ Parse a python file with astroid.
-    """
-    with open(filepath) as fh:
-            code: str = fh.read()
-    return astroid.parse(code)
-
-
-class ModuleNetwork(nx.DiGraph):
-    """
-    """
-    
-    def __init__(self):
-        super().__init__()
-
-    def filter_nodes(self, node_type: str, data: bool = True) -> List[Tuple[Path, Dict]]:
-        """
-        """
-        if data:
-            return [(n,attr) for n,attr in self.nodes(data=True) if attr["_type"] == node_type]
-        else:
-            return [n for n,attr in self.nodes(data=True) if attr["_type"] == node_type]
-    
-    def filter_links(self, link_type: str) -> List[Tuple[Path, Path, Dict]]:
-        """
-        """
-        return [(src,dst,attr) for src,dst,attr in self.edges(data=True) if attr["_type"] == link_type]
-        
-
-def filter_nodes(network: nx.DiGraph, node_type: str, data: bool = True) -> List[Tuple[Path, Dict]]:
-    """
-    """
-    if data:
-        return [(n,attr) for n,attr in network.nodes(data=True) if attr["_type"] == node_type]
-    else:
-        return [n for n,attr in network.nodes(data=True) if attr["_type"] == node_type]
-    
-def filter_links(network: nx.DiGraph, link_type: str) -> List[Tuple[Path, Path, Dict]]:
-    """
-    """
-    return [(src,dst,attr) for src,dst,attr in network.edges(data=True) if attr["_type"] == link_type]
+from ..module.imports import get_module_imports
+from . import utils
 
 
 def create(filepaths: List[Path], project_path: Path) -> nx.DiGraph:
@@ -57,7 +15,6 @@ def create(filepaths: List[Path], project_path: Path) -> nx.DiGraph:
         with directory tree hierarchy links and module import links.
     """
     g = nx.DiGraph()
-    # g = ModuleNetwork()
 
     # add hierarchy links
     # ex: dir -(hierarchy)-> dir/subdir
@@ -79,7 +36,7 @@ def create(filepaths: List[Path], project_path: Path) -> nx.DiGraph:
 
     # add import links
     for filepath in filenodes:
-        module_ast = _parse_python_file(filepath)
+        module_ast = utils.parse_python_file(filepath)
         internal_imports, external_imports = get_module_imports(module_path=filepath, 
                                                                 module_ast=module_ast, 
                                                                 project_path=project_path

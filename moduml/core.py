@@ -7,7 +7,7 @@ import pydot
 import networkx as nx
 
 from . import graph_viz_builder
-from . import network_creator
+from . import network
 
 
 def main():
@@ -49,17 +49,17 @@ def main():
     filepaths = [p for p in filepaths if p not in exclude_filepaths]
 
     # convert filepaths to graph
-    network = network_creator.create(filepaths, project_path=path)
+    net = network.create(filepaths, project_path=path)
 
     # create directory view
-    dot: pydot.Dot = graph_viz_builder.build_dot_layout(network=network, 
+    dot: pydot.Dot = graph_viz_builder.build_dot_layout(network=net, 
                                                     project_path=path,
                                                     dir_as=args.dir_as, 
                                                     show_interface=args.show_interface,
                                                     show_imports=args.show_imports
                                                     )
     
-    # output as string or PNG file
+    # output as string or image file
     if args.output_file:
         file_ext = args.output_file.split(".")[-1]
         dot.write(args.output_file, prog="dot", format=file_ext)

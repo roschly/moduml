@@ -1,15 +1,12 @@
 from typing import Dict, List, Tuple
 from pathlib import Path
 import argparse
-import re
 
 import networkx as nx
 import pydot
-import astroid
 
-from .module.imports import get_module_imports
 from .layout_types import DirLayout, FileLayout, EdgeLayout
-from .network_creator import filter_nodes, filter_links
+from .network import filter_nodes, filter_links
 
 
 # Global reference to program args, assigned from outside this module.
