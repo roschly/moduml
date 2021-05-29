@@ -7,7 +7,7 @@ import pydot
 import networkx as nx
 
 from . import graph_viz_builder
-from .utils import paths2graph
+from . import network_creator
 
 
 def main():
@@ -49,10 +49,10 @@ def main():
     filepaths = [p for p in filepaths if p not in exclude_filepaths]
 
     # convert filepaths to graph
-    graph: nx.DiGraph = paths2graph.to_graph(paths=filepaths)
+    network = network_creator.create(filepaths, project_path=path)
 
     # create directory view
-    dot: pydot.Dot = graph_viz_builder.build_dot_layout(g=graph, 
+    dot: pydot.Dot = graph_viz_builder.build_dot_layout(network=network, 
                                                     project_path=path,
                                                     dir_as=args.dir_as, 
                                                     show_interface=args.show_interface,
