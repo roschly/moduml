@@ -1,7 +1,7 @@
 
 import argparse
 from pathlib import Path
-from typing import List
+from typing import List, Set
 
 import pydot
 import networkx as nx
@@ -10,13 +10,45 @@ from . import graph_viz_builder
 from . import network
 
 
+def exclude_nodes(project_path: Path,
+                  net: nx.DiGraph,
+                  excl_pattern: str, 
+                  incl_pattern: str
+                  ) -> Set[Path]:
+    """ Returns the nodes/filepaths to be excluded, based on excl and incl patterns.
+        Excl: exclude any node that matches the excl pattern
+        Incl: exclude any node that isnt in the incl pattern OR shares an edge with one.
+    """
+    incl_filepaths = []
+    excl_filepaths = []
+    if incl_pattern:
+        incl_filepaths: List[Path] = list(project_path.rglob(incl_pattern))
+    if excl_pattern:
+        excl_filepaths: List[Path] = list(project_path.rglob(excl_pattern))
+
+    # excl files
+    excl_nodes = [n for n,attr in net.nodes(data=True) if n in excl_filepaths and attr["_type"] == "file"]
+
+    # incl files
+    if incl_pattern:
+        incl_edges = [(src,dst) for src,dst in net.edges() if src in incl_filepaths or dst in incl_filepaths]
+        incl_net = nx.DiGraph()
+        incl_net.add_edges_from(incl_edges)
+        excl_nodes += [n for n,attr in net.nodes(data=True) if n not in incl_net.nodes() and attr["_type"] == "file"]
+    
+    # Return nodes without duplicates (e.g. set)
+    return set(excl_nodes)
+    
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="Path to directory containing python project.")
     #
     parser.add_argument("--dir-as", type=str, default="node", help="Draw a directory as 'node' (default), 'cluster' or 'empty' (not drawn).")
     parser.add_argument("--output-file", type=str, help="Replace dot string output with name of image file incl. extension (e.g. img.png). Supports file formats from GraphViz (e.g. png, svg).")
-    parser.add_argument("--exclude-files", type=str, help="Glob pattern for excluding files.")
+    parser.add_argument("--excl", type=str, help="Glob pattern for excluding files.")
+    parser.add_argument("--incl", type=str, help="Glob pattern for including files.")
     # layout components
     parser.add_argument("--full-filepath", action="store_true", help="Show filenames with their full path. Default is to only show filename.")
     parser.add_argument("--show-interface", action="store_true", help="Show interface (var + function names) on file nodes.")
@@ -38,18 +70,16 @@ def main():
     path = Path(args.path)
     if not path.is_dir():
         raise argparse.ArgumentTypeError("Must be a directory path")
-    
+
     # find all python files in path
     filepaths: List[Path] = list(path.rglob("*.py"))
 
-    # optional: ignore files pattern
-    exclude_filepaths = []
-    if args.exclude_files:
-        exclude_filepaths: List[Path] = list(path.rglob(args.exclude_files))
-    filepaths = [p for p in filepaths if p not in exclude_filepaths]
-
     # convert filepaths to graph
-    net = network.create(filepaths, project_path=path)
+    net: nx.DiGraph = network.create(filepaths, project_path=path)
+
+    # exclude nodes based on glob pattern args
+    excl_nodes = exclude_nodes(project_path=path, net=net, excl_pattern=args.excl, incl_pattern=args.incl)
+    net.remove_nodes_from(excl_nodes)
 
     # create directory view
     dot: pydot.Dot = graph_viz_builder.build_dot_layout(network=net, 
