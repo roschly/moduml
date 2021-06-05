@@ -8,7 +8,7 @@ import astroid
 
 from .module.interface import ModuleInterface
 from .module import interface
-from . import network_creator
+from .network import filter_links
 
 
 def _is_package(network: nx.DiGraph, node: Path) -> bool:
@@ -16,7 +16,7 @@ def _is_package(network: nx.DiGraph, node: Path) -> bool:
     """
     s: Path
     n = nx.DiGraph()
-    n.add_edges_from( network_creator.filter_links(network, "hierarchy") )
+    n.add_edges_from( filter_links(network, "hierarchy") )
     for s in n.successors(node):
         if s.relative_to(node).as_posix() == "__init__.py":
             return True
