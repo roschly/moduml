@@ -49,6 +49,7 @@ def main():
     parser.add_argument("--output-file", type=str, help="Replace dot string output with name of image file incl. extension (e.g. img.png). Supports file formats from GraphViz (e.g. png, svg).")
     parser.add_argument("--excl", type=str, help="Glob pattern for excluding files. Exclude files matching the pattern and any links to them.")
     parser.add_argument("--incl", type=str, help="Glob pattern for including files. Only files matching incl pattern AND files they import are shown.")
+    parser.add_argument("--highlight", type=str, default=None, help="Name of EXTERNAL package. Files that import it will be highlighted via color.")
     # layout components
     parser.add_argument("--full-filepath", action="store_true", help="Show filenames with their full path. Default is to only show filename.")
     parser.add_argument("--show-interface", action="store_true", help="Show interface (var + function names) on file nodes.")
