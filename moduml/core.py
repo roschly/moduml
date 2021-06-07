@@ -45,10 +45,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="Path to directory containing python project.")
     #
-    parser.add_argument("--dir-as", type=str, default="node", help="Draw a directory as 'node' (default), 'cluster' or 'empty' (not drawn).")
+    parser.add_argument("--dir-as", type=str, default="node", choices=["node", "cluster", "empty"], help="Draw a directory as 'node' (default), 'cluster' or 'empty' (not drawn).")
     parser.add_argument("--output-file", type=str, help="Replace dot string output with name of image file incl. extension (e.g. img.png). Supports file formats from GraphViz (e.g. png, svg).")
-    parser.add_argument("--excl", type=str, help="Glob pattern for excluding files.")
-    parser.add_argument("--incl", type=str, help="Glob pattern for including files.")
+    parser.add_argument("--excl", type=str, help="Glob pattern for excluding files. Exclude files matching the pattern and any links to them.")
+    parser.add_argument("--incl", type=str, help="Glob pattern for including files. Only files matching incl pattern AND files they import are shown.")
     # layout components
     parser.add_argument("--full-filepath", action="store_true", help="Show filenames with their full path. Default is to only show filename.")
     parser.add_argument("--show-interface", action="store_true", help="Show interface (var + function names) on file nodes.")
@@ -58,7 +58,10 @@ def main():
     parser.add_argument("--show-func-return-type", action="store_true", help="Show the return type of a function.")
     parser.add_argument("--show-func-decorators", action="store_true", help="Show the decorators of a function.")
     # styling
-    parser.add_argument("--rankdir", type=str, default="TB", help="Layout ordering for graph: 'TB' top-bottom (default), 'LR' left-right. OBS! 'LR' changes the interface layout.")
+    parser.add_argument("--rankdir", type=str, default="TB", choices=["TB", "LR"], help="Layout ordering for graph: 'TB' top-bottom (default), 'LR' left-right. OBS! 'LR' changes the interface layout.")
+    parser.add_argument("--nodesep", type=float, default=0.5, help="Separation between nodes, i.e. horizontal spacing (when rankdir==top-bottom).")
+    parser.add_argument("--ranksep", type=float, default=0.5, help="Separation between ranks (levels of nodes), i.e. vertical spacing (when rankdir==top-bottom).")
+    parser.add_argument("--combine-links", action="store_true", help="Combine links when possible, to minimize the clutter. OBS: combines edges of different types.")
     args = parser.parse_args()
 
     # Make args available to the graph_viz_builder module.
