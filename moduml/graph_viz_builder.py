@@ -45,7 +45,9 @@ class GraphVizBuilder:
         self._graph = pydot.Dot(graph_type="digraph", 
                                 rankdir=self.rankdir,
                                 fontname="Helvetica",
-                                concentrate=True # combine edges when possible
+                                concentrate=ARGS.combine_links, # combine edges when possible
+                                nodesep=ARGS.nodesep,
+                                ranksep=ARGS.ranksep
                                 )
         self._graph.set_node_defaults(fontname="Helvetica")
 

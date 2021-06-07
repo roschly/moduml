@@ -61,7 +61,8 @@ class FileLayout(pydot.Node):
                  ) -> None:
         super().__init__(name=node.as_posix())
         self.set("shape", "record")
-        filename = node.as_posix() if full_filepath else node.relative_to(node.parent).as_posix()
+        filename: str = node.as_posix() if full_filepath else node.relative_to(node.parent).as_posix()
+        filename = filename.replace("/", " / ")
         
         if with_interface:
             mod_int: ModuleInterface = interface.get_module_interface(module_path=node)
