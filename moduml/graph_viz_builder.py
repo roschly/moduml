@@ -22,22 +22,6 @@ def _handle_weird_pydot_name(cluster_node: Path) -> str:
     cluster_node_name = pydot.Node(name=cluster_node.as_posix()).get_name()
     return cluster_node_name
 
-def _is_node_importing_ext_package(net: nx.DiGraph, 
-                                   node: Path, 
-                                   ext_package: Path
-                                   ) -> bool:
-    """
-    """
-    # TODO: clean this up, assert text is not acccurate
-    if not ext_package: return False
-    assert ext_package in net.nodes(data=False), f"'{ext_package}' is not an external package"
-    is_ext = net.nodes[ext_package]["_type"] == "ext_package"
-    if not is_ext: return False
-    has_edge = net.has_edge(node, ext_package)
-    if not has_edge: return False
-    as_import = net.edges[node, ext_package]["_type"] == "import"
-    return as_import
-
 
 class GraphVizBuilder:
     def __init__(self, 
@@ -76,9 +60,11 @@ class GraphVizBuilder:
 
     def add_file_nodes(self, with_interface: bool = False) -> None:
         for n in self.file_nodes:
-            node_color = "black"
-            if _is_node_importing_ext_package(net=self.network, node=n, ext_package=Path(ARGS.highlight)):
-                node_color = "red"
+            node_color = None
+            ext_package = Path(ARGS.highlight) if ARGS.highlight else None
+            if self.network.has_edge(n, ext_package) and self.network.edges[n, ext_package]["_type"] == "import":
+                # node_color = "red"
+                node_color = "lightskyblue1"
             node = FileLayout(node=n, 
                               with_interface=with_interface,
                               color=node_color,

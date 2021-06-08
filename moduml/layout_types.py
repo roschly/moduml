@@ -55,14 +55,16 @@ class FileLayout(pydot.Node):
                  node: Path, 
                  with_interface: bool,
                  full_filepath: bool,
-                 color: str = "black",
+                 color: str,
                  show_class_bases: bool = False,
                  show_func_decorators: bool = False,
                  show_func_return_type: bool = False
                  ) -> None:
         super().__init__(name=node.as_posix())
         self.set("shape", "record")
-        self.set("color", color)
+        if color: 
+            self.set("style", "filled")
+            self.set("fillcolor", color)
         filename: str = node.as_posix() if full_filepath else node.relative_to(node.parent).as_posix()
         filename = filename.replace("/", " / ")
         

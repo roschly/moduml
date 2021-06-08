@@ -1,7 +1,8 @@
 
-import argparse
+from argparse import Namespace, ArgumentParser
 from pathlib import Path
 from typing import List, Set
+import logging
 
 import pydot
 import networkx as nx
@@ -40,9 +41,8 @@ def exclude_nodes(project_path: Path,
     return set(excl_nodes)
     
 
-
-def main():
-    parser = argparse.ArgumentParser()
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
     parser.add_argument("path", type=str, help="Path to directory containing python project.")
     #
     parser.add_argument("--dir-as", type=str, default="node", choices=["node", "cluster", "empty"], help="Draw a directory as 'node' (default), 'cluster' or 'empty' (not drawn).")
@@ -64,12 +64,12 @@ def main():
     parser.add_argument("--ranksep", type=float, default=0.5, help="Separation between ranks (levels of nodes), i.e. vertical spacing (when rankdir==top-bottom).")
     parser.add_argument("--combine-links", action="store_true", help="Combine links when possible, to minimize the clutter. OBS: combines edges of different types.")
     args = parser.parse_args()
+    return args
 
-    # Make args available to the graph_viz_builder module.
-    # Purpose: easy access to styling options, e.g. import-link-color.
-    # Otherwise all these options would have to be pipped all the way down.
-    graph_viz_builder.ARGS = args
 
+def main():
+    args = parse_args()
+    
     # must be a directory path, for now
     path = Path(args.path)
     if not path.is_dir():
@@ -81,9 +81,23 @@ def main():
     # convert filepaths to graph
     net: nx.DiGraph = network.create(filepaths, project_path=path)
 
+    # check that external package for highlighting exists
+    if args.highlight:
+        ext_package = Path(args.highlight)
+        if ext_package in net.nodes() and net.nodes[ext_package]["_type"] == "ext_package": 
+            pass
+        else: 
+            args.highlight = None
+            logging.warning(f"Cannot find external package to highlight: '{ext_package}'")
+    
     # exclude nodes based on glob pattern args
     excl_nodes = exclude_nodes(project_path=path, net=net, excl_pattern=args.excl, incl_pattern=args.incl)
     net.remove_nodes_from(excl_nodes)
+    
+    # Make args available to the graph_viz_builder module.
+    # Purpose: easy access to styling options, e.g. import-link-color.
+    # Otherwise all these options would have to be pipped all the way down.
+    graph_viz_builder.ARGS = args
 
     # create directory view
     dot: pydot.Dot = graph_viz_builder.build_dot_layout(network=net, 
