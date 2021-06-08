@@ -60,8 +60,14 @@ class GraphVizBuilder:
 
     def add_file_nodes(self, with_interface: bool = False) -> None:
         for n in self.file_nodes:
+            node_color = None
+            ext_package = Path(ARGS.highlight) if ARGS.highlight else None
+            if self.network.has_edge(n, ext_package) and self.network.edges[n, ext_package]["_type"] == "import":
+                # node_color = "red"
+                node_color = "lightskyblue1"
             node = FileLayout(node=n, 
                               with_interface=with_interface,
+                              color=node_color,
                               full_filepath=ARGS.full_filepath,
                               show_class_bases=ARGS.show_class_bases,
                               show_func_decorators=ARGS.show_func_decorators,
