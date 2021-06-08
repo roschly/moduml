@@ -31,17 +31,10 @@ moduml applied to itself:
 ## Todos
 
 ### minor fixes
-- ~~add spacing options via nodesep and ranksep~~
-- ~~add choices to args~~
-- ~~add better help descriptions where needed~~
-- ~~make concentrate, i.e. combine edges, an option (it combines edges of different types, i.e. hierarchy and imports)~~
-- ~~show full filepaths with spaces around the slash "/" --> " / "~~
 
 
 
 ### small features
-- ~~add option for focusing on pattern-specified files, only showing the matched files along with their immediate neighbors (imports + hiearchy edges in both directions).~~
-- add option for highlightning files that import specified external packages, e.g. all files importing numpy
 - consider option for defining the number of parents to show in "full"-filepath, e.g. (path/to/file.py) --> to/file.py
 - option to remove/not-draw nodes with no edges/links.
 - add a couple of sensible default views, that ignores other specific args (or just overwrites the ones it uses), e.g. interface-view (dir-as node, only hiearchy imports, show-interface)
