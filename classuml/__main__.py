@@ -4,20 +4,20 @@ from typing import Dict, List, Tuple
 import astroid
 import pydot
 
+from .class_extractor import ClassData, ClassExtractor
 
-class ClassExtractor:
-    """Extracts classes from a module."""
 
-    def __init__(self, filepath: Path, module: astroid.Module) -> None:
-        self.filepath = filepath
-        self.module = module
-
-        self.classes = []
-
-        self._extract_classes()
-
-    def _extract_classes(self) -> None:
-        self.classes = [e for e in self.module.body if isinstance(e, astroid.ClassDef)]
+class ClassNode(pydot.Node):
+    def __init__(self, class_data: ClassData) -> None:
+        super().__init__(name=class_data.name)
+        self.set("shape", "record")
+        self.set("color", "red")
+        methods_string = "\l".join([m.name for m in class_data.methods]) + "\l"
+        basenames_string = "\l" + ",".join([b for b in class_data.basenames])
+        self.set(
+            "label",
+            f"{{ {class_data.name}( {basenames_string} ) | {methods_string} }}",
+        )
 
 
 def main():
@@ -44,7 +44,7 @@ def main():
     ]
 
     dot = pydot.Dot(
-        graph_type="digraph", rankdir="LR", fontname="Helvetica", nodesep=1, ranksep=1
+        graph_type="digraph", rankdir="TB", fontname="Helvetica", nodesep=1, ranksep=1
     )
     dot.set_node_defaults(fontname="Helvetica")
 
@@ -74,10 +74,6 @@ def main():
                 edges[(parent, path)] = edge
             path = parent
 
-    # if _is_package(network=network, node=node): self.set("shape", "component")
-    #     else: self.set("shape", "folder")
-    #     self.set("color", "red")
-
     # add nodes to pydot graph
     for path, node in nodes.items():
         shape = "folder" if path.is_dir() else "component"
@@ -91,11 +87,12 @@ def main():
     # add edge from file/module to class
     for path, module in relative_paths_and_modules:
         cls_extractor = ClassExtractor(filepath=path, module=module)
-        for cls in cls_extractor.classes:
-            qualified_class_name = cls.name
+        for cls_data in cls_extractor.classes:
+            # qualified_class_name = cls.name
             path_node = nodes[path]
-            cls_node = pydot.Node(name=qualified_class_name)
-            cls_node.set("shape", "rect")
+            # cls_node = pydot.Node(name=qualified_class_name)
+            # cls_node.set("shape", "rectangle")
+            cls_node = ClassNode(class_data=cls_data)
             dot.add_node(cls_node)
             dot.add_edge(pydot.Edge(path_node, cls_node))
 
