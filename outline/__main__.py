@@ -2,15 +2,18 @@ from typing import Generator, List, Tuple
 from pathlib import Path
 from argparse import ArgumentParser, Namespace
 import logging
+import sys
 
 import astroid
+from xml.etree import ElementTree as ET
 
 from .data_types import ModuleData
-from .layouts import ModuleLayout
+from .text_layouts import ModuleLayout as ModuleLayoutText
+from .html_layouts import ModuleLayout as ModuleLayoutHtml
 
 # name of txt file containing outline
 # if to-txt flag enabled
-DEFAULT_TXT_FILENAME = "_outline_.txt"
+DEFAULT_TXT_FILENAME = "_outline_"
 
 
 def parse_args() -> Namespace:
@@ -35,14 +38,64 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--to-txt",
         action="store_true",
-        help=f"Save outline to '{DEFAULT_TXT_FILENAME}' file.",
+        help=f"Save outline to '{DEFAULT_TXT_FILENAME}'.txt file.",
+    )
+    parser.add_argument(
+        "--to-html",
+        action="store_true",
+        help=f"Save outline as HTML to '{DEFAULT_TXT_FILENAME}'.html file.",
     )
     return parser.parse_args()
+
+
+def build_output_string(path_and_modules: List, absolute_path: bool, root: Path) -> str:
+    s = ""
+    for path, module in path_and_modules:
+        # TODO: let ModuleLayout handle path string as well
+        s += str(path) if absolute_path else str(path.relative_to(root))
+        s += "\n" + str(ModuleLayoutText(ModuleData(module), n_indent=0))
+    return s
+
+"""
+<head>
+<style>
+body {background-color: powderblue;}
+h1   {color: blue;}
+p    {color: red;}
+</style>
+</head>
+
+"""
+
+"""
+div = ET.Element("div", attrib={"class": "foo"})
+body.append(div)
+span = ET.Element("span", attrib={"class": "bar"})
+div.append(span)
+span.text = "Hello World"
+"""
+
+
+def build_html_string(path_and_modules: List, absolute_path: bool, root: Path) -> str:
+    # TODO: add css internal style
+    html = ET.Element("html")
+    head = ET.Element("head")
+    html.append(head)
+
+    body = ET.Element("body")
+    html.append(body)
+
+    for path, module in path_and_modules:
+        mod = ModuleLayoutHtml(filepath=path, module=ModuleData(module)).html
+        body.append(mod)
+
+    return html
 
 
 def main():
     """
     TODO:
+        - data_types: output xml structure, then parse that into text (i.e. change indent-tag to spaces, etc)
         - add default values to args?
         - consider custom file ext and color scheme for that ext in vscode
         - filter on: func return type, what to see (class, func, global vars)
@@ -57,16 +110,17 @@ def main():
 
     # find all .py filepaths in root
     filepaths: List[Path] = list(root.rglob("*.py"))
-    print(len(filepaths))
 
     # TODO: don't traverse directory more than once?
     # filepaths to ignore
     paths_to_ignore = []
     if not args.include_test:
-        paths_to_ignore += root.rglob("**/test_*.py")
+        paths_to_ignore += list(root.rglob("**/test_*.py"))
     if args.incl:
         # ignore all other filepaths than those found via incl glob pattern.
-        paths_to_ignore += [f for f in filepaths if f not in root.rglob(args.incl)]
+        paths_to_ignore += [
+            f for f in filepaths if f not in list(root.rglob(args.incl))
+        ]
         if len(paths_to_ignore) == len(filepaths):
             logging.warning(
                 f"All filepaths are being ignored with the current INCL glob pattern: {args.incl}"
@@ -80,18 +134,33 @@ def main():
                 module = astroid.parse(fh.read())
             path_and_modules.append((filepath, module))
         except Exception as e:
-            logging.warning(f"Ignoring file '{filepath}' because of the following error:")
+            logging.warning(
+                f"Ignoring file '{filepath}' because of the following error:"
+            )
             logging.warning(e)
 
-    # build output string
-    s = ""
-    for path, module in path_and_modules:
-        s += str(path) if args.absolute_path else str(path.relative_to(root))
-        s += "\n" + str(ModuleLayout(ModuleData(module), n_indent=0))
+    # save as html
+    if args.to_html:
+        html = build_html_string(
+            path_and_modules=path_and_modules,
+            absolute_path=args.absolute_path,
+            root=root,
+        )
+        ET.ElementTree(html).write(sys.stdout, encoding="unicode", method="html")
+        return
+        # s = "<html><h1>Hey!</h1></html>"
+        # with open(DEFAULT_TXT_FILENAME + ".html", "w") as fh:
+        #     fh.write(s)
+        # return
 
-    # save or print output
+    # save as text, either print to terminal or save to file
+    s = build_output_string(
+        path_and_modules=path_and_modules,
+        absolute_path=args.absolute_path,
+        root=root,
+    )
     if args.to_txt:
-        with open(DEFAULT_TXT_FILENAME, "w") as fh:
+        with open(DEFAULT_TXT_FILENAME + ".txt", "w") as fh:
             fh.write(s)
     else:
         print(s)
