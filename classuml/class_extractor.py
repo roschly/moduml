@@ -9,12 +9,21 @@ from astroid import decorators
 @dataclass
 class FunctionData:
     name: str
+    return_type: str
 
     @classmethod
     def from_function_def(cls, func_def: astroid.FunctionDef) -> "FunctionData":
-        d = {}
-        d["name"] = func_def.name
-        return cls(**d)
+        try:
+            d = {}
+            d["name"] = func_def.name
+            # d["return_type"] = "" if not func_def.returns else func_def.returns.name
+            d["return_type"] = (
+                "" if not func_def.returns else func_def.returns.as_string()
+            )
+            return cls(**d)
+        except Exception as e:
+            print(func_def.as_string())
+            raise e
 
 
 @dataclass

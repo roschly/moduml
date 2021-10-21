@@ -4,20 +4,45 @@ from typing import Dict, List, Tuple
 import astroid
 import pydot
 
-from .class_extractor import ClassData, ClassExtractor
+from .class_extractor import ClassData, ClassExtractor, FunctionData
 
 
 class ClassNode(pydot.Node):
     def __init__(self, class_data: ClassData) -> None:
         super().__init__(name=class_data.name)
+        self.class_data = class_data
+
         self.set("shape", "record")
         self.set("color", "red")
-        methods_string = "\l".join([m.name for m in class_data.methods]) + "\l"
-        basenames_string = "\l" + ",".join([b for b in class_data.basenames])
-        self.set(
-            "label",
-            f"{{ {class_data.name}( {basenames_string} ) | {methods_string} }}",
+        self.set("label", self.to_record_str())
+
+    def method_to_str(self, method: FunctionData) -> str:
+        return f"{method.name}: {method.return_type}"
+
+    def to_record_str(self):
+        decos = self.class_data.decorators
+        decorators_string = f"@{', '.join(decos)} \l" if decos else ""
+        basenames_string = (
+            ": " + ",".join([b for b in self.class_data.basenames])
+            if self.class_data.basenames
+            else ""
         )
+        methods_string = (
+            "\l".join([self.method_to_str(m) for m in self.class_data.methods]) + "\l"
+        )
+
+        res = (
+            "{ "
+            + f"{decorators_string}"
+            + f"{self.class_data.name}"
+            + f"{basenames_string}"
+            + " | "
+            + f"{methods_string}"
+            + " }"
+        )
+        print(res)
+
+        return res
 
 
 def main():
@@ -88,17 +113,14 @@ def main():
     for path, module in relative_paths_and_modules:
         cls_extractor = ClassExtractor(filepath=path, module=module)
         for cls_data in cls_extractor.classes:
-            # qualified_class_name = cls.name
             path_node = nodes[path]
-            # cls_node = pydot.Node(name=qualified_class_name)
-            # cls_node.set("shape", "rectangle")
             cls_node = ClassNode(class_data=cls_data)
             dot.add_node(cls_node)
             dot.add_edge(pydot.Edge(path_node, cls_node))
 
     # output as string or image file
     dot.write("bla.png", prog="dot", format="png")
-    print(dot.to_string())
+    # print(dot.to_string())
 
 
 if __name__ == "__main__":
