@@ -12,10 +12,18 @@ class Bla(Blu):
     def __init__(self) -> None:
         pass
 
-    def method_one(self, num: int) -> int:
+    def method_one(
+            self, 
+            num: int,
+            node: pydot.Node,
+            deep_node: pydot.Node.NodeA,
+            bla: int = 2
+        ) -> int:
         return num + 1
 
-    def bla(self) -> pydot.Node:
+    @staticmethoc
+    @some_deco(param1=2)
+    def bla() -> pydot.Node:
         pass
 
 @dataclass
@@ -47,5 +55,8 @@ func_defs = list(c.mymethods())
 f = func_defs[2]
 
 # %%
+
+for d in list(f.decorators.get_children()):
+    print(d.name)
 
 # %%
