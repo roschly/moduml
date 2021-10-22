@@ -71,8 +71,9 @@ class ClassData:
 class ModuleData:
     def __init__(self, module: astroid.Module) -> None:
         class_defs = [e for e in module.body if isinstance(e, astroid.ClassDef)]
+        func_defs = [e for e in module.body if isinstance(e, astroid.FunctionDef)]
         self.classes: List[ClassData] = [ClassData(c) for c in class_defs]
-        self.functions: List[FunctionData] = []
+        self.functions: List[FunctionData] = [FunctionData(f) for f in func_defs]
 
     def __str__(self) -> str:
         return ""

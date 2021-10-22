@@ -56,25 +56,6 @@ def build_output_string(path_and_modules: List, absolute_path: bool, root: Path)
         s += "\n" + str(ModuleLayoutText(ModuleData(module), n_indent=0))
     return s
 
-"""
-<head>
-<style>
-body {background-color: powderblue;}
-h1   {color: blue;}
-p    {color: red;}
-</style>
-</head>
-
-"""
-
-"""
-div = ET.Element("div", attrib={"class": "foo"})
-body.append(div)
-span = ET.Element("span", attrib={"class": "bar"})
-div.append(span)
-span.text = "Hello World"
-"""
-
 
 def build_html_string(path_and_modules: List, absolute_path: bool, root: Path) -> str:
     # TODO: add css internal style
@@ -82,11 +63,33 @@ def build_html_string(path_and_modules: List, absolute_path: bool, root: Path) -
     head = ET.Element("head")
     html.append(head)
 
+    style = ET.Element("style")
+    style.text = """
+    body {
+            background-color: #1e1e1e; 
+            color: white; 
+            font-family: 
+            monospace, monaco;
+        }
+    ul   {list-style-type: none;}
+    
+    .module_path {color: green;}
+    .function_def {color: #03a1fc;}
+    .function_return_type {color: #32cfc9; font-style: italic;}
+    .class_def {color: #03a1fc;}
+    .decorator {color: yellow;}
+    .argument_type {color: #32cfc9; font-style: italic;}
+    """
+    head.append(style)
+
     body = ET.Element("body")
     html.append(body)
 
     for path, module in path_and_modules:
-        mod = ModuleLayoutHtml(filepath=path, module=ModuleData(module)).html
+        mod = ModuleLayoutHtml(
+            filepath=path if absolute_path else path.relative_to(root),
+            module=ModuleData(module),
+        )
         body.append(mod)
 
     return html
@@ -148,10 +151,6 @@ def main():
         )
         ET.ElementTree(html).write(sys.stdout, encoding="unicode", method="html")
         return
-        # s = "<html><h1>Hey!</h1></html>"
-        # with open(DEFAULT_TXT_FILENAME + ".html", "w") as fh:
-        #     fh.write(s)
-        # return
 
     # save as text, either print to terminal or save to file
     s = build_output_string(
