@@ -1,115 +1,177 @@
 from pathlib import Path
 
-import pydot
 import astroid
 
-from moduml_simple.core import main
-from moduml_simple.module_imports import get_module_imports, ModuleImports
+from moduml.module.imports import (
+    get_module_imports,
+    relative_import_from,
+    absolute_import_from,
+    absolute_import,
+    BaseImportPath,
+    ImportFromPath,
+    ImportPath,
+)
 
 
-def test_module_imports():
-    assert True
+def test_relative_import_from():
+    filepath = Path("foo/bar/mod.py")
 
-    import_cases = [
-        "import numpy",
-        "import numpy as np",
-        "import numpy, astroid",
-        "import astroid, numpy as np",
+    # relative from ... import's
+    inputs_outputs = [
+        ("from . import array", [filepath.parent / "array"]),
+        (
+            "from . import array, matrix",
+            [filepath.parent / elem for elem in ("array", "matrix")],
+        ),
+        ("from ..baz import func", [filepath.parents[1] / "baz/func"]),
+        (
+            "from ..baz import func as f, method as m",
+            [filepath.parents[1] / elem for elem in ("baz/func", "baz/method")],
+        ),
+        (
+            "from . import array\nfrom . import matrix",
+            [filepath.parent / elem for elem in ("array", "matrix")],
+        ),
     ]
 
-    import_from_cases = [
-        "from numpy import array",
-        "from .core import some_module",
-        "from . import filtering",
+    # TODO:
+    # I need the case where there could be a conflict with names in __init__ and
+    # names of modules in package
+    # Example:
+    #   package/mod01.py
+    #       from . import bla
+    #   if package/__init__.py contains a variable named bla, that would be imported
+    #   if package/bla.py existed, moduml would assume it was imported, but it wouldnt if (see above)
+
+    # TODO: should throw exception when trying to relative import beyond project structure
+    # filepath = Path("foo/bar/mod.py")
+    # ("from .....baz import func", [filepath.parents[1] / "baz/func"]),
+
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        import_froms = relative_import_from(module=m, module_path=filepath)
+        assert import_froms == [ImportFromPath(o) for o in outputs]
+
+    # ensure it doesn't return anythin when given
+    # non-relative imports
+    m = astroid.parse("import numpy")
+    import_froms = relative_import_from(module=m, module_path=filepath)
+    assert import_froms == []
+
+    m = astroid.parse("from numpy import array")
+    import_froms = relative_import_from(module=m, module_path=filepath)
+    assert import_froms == []
+
+
+def test_absolute_import_from():
+    root = Path("foo")
+
+    inputs_outputs = [
+        # we cant know the difference between
+        # importing module from package and
+        # importing function from module
+        ("from package import module", [root / "package" / "module"]),
+        ("from module import func", [root / "module" / "func"]),
+        #
+        (
+            "from package import module01, module02",
+            [root / "package" / "module01", root / "package" / "module02"],
+        ),
+        (
+            "from package import module01 as mod1",
+            [root / "package" / "module01"],
+        ),
     ]
 
-    """ special cases:
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        import_froms = absolute_import_from(module=m, project_path=root)
+        assert import_froms == [ImportFromPath(o) for o in outputs]
 
-    importing a folder --> should point to folder's __init__ file instead
-    importing from within a package
-    
-    """
+    # ensure return nothing when not absolute import froms
+    m = astroid.parse("import package")
+    import_froms = absolute_import_from(module=m, project_path=root)
+    assert import_froms == []
 
-    """
-    take module AST
-    return simplified imports
-    try to qualify imports
-    
-    """
+    m = astroid.parse("from ..relative_package import module")
+    import_froms = absolute_import_from(module=m, project_path=root)
+    assert import_froms == []
 
 
-"""
-from package_one import module_one
+def test_absolute_import():
+    root = Path("foo")
 
-options:
-- root/package_one/module_one.py
-- root/package_one.py
-- root/package_one/__init__.py
+    inputs_outputs = [
+        ("import package", [root / "package"]),
+        ("import package01, package02", [root / "package01", root / "package02"]),
+        ("import package as pk, package02", [root / "package", root / "package02"]),
+    ]
 
-"""
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        import_froms = absolute_import(module=m, project_path=root)
+        assert import_froms == [ImportFromPath(o) for o in outputs]
+
+    # ensure return nothing when not absolute imports
+    m = astroid.parse("from package import module")
+    import_froms = absolute_import(module=m, project_path=root)
+    assert import_froms == []
+
+    m = astroid.parse("from ..relative_package import module")
+    import_froms = absolute_import(module=m, project_path=root)
+    assert import_froms == []
+
+
+def test_try_to_qualify_import_path():
+    import_path = Path("test_dir/package_one")
+    path = BaseImportPath.try_to_qualify_import_path(import_path)
+    assert path == import_path / "__init__.py"
+
+    import_path = Path("test_dir/package_one/module_one")
+    path = BaseImportPath.try_to_qualify_import_path(import_path)
+    assert path == import_path.with_suffix(".py")
+
+    import_path = Path("test_dir/utils")
+    path = BaseImportPath.try_to_qualify_import_path(import_path)
+    assert path == import_path.with_suffix(".py")
+
+    import_path = Path("test_dir/package_three")
+    path = BaseImportPath.try_to_qualify_import_path(import_path)
+    assert not path
+
+
+def test_import_path_try_to_qualify():
+    pass
+
+
+def test_import_from_path_try_to_qualify():
+    # should work similar to its super class qualify method,
+    # if path points to package or module
+    import_path = Path("test_dir/package_one")
+    assert (
+        BaseImportPath.try_to_qualify_import_path(import_path)
+        == ImportFromPath(import_path).try_to_qualify()
+    )
+    import_path = Path("test_dir/package_one/module_one")
+    assert (
+        BaseImportPath.try_to_qualify_import_path(import_path)
+        == ImportFromPath(import_path).try_to_qualify()
+    )
+
+    # if path points to element in a module or package,
+    # it should default to module or package/__init__
+    import_path = Path("test_dir/package_one/module_one/function_one")
+    assert ImportFromPath(import_path).try_to_qualify() == Path(
+        "test_dir/package_one/module_one.py"
+    )
+
+    import_path = Path("test_dir/package_one/function_one")
+    assert ImportFromPath(import_path).try_to_qualify() == Path(
+        "test_dir/package_one/__init__.py"
+    )
+
+    # assert False
 
 
 def test_get_module_imports():
-    root = Path("foo")
-    filepath = Path("foo/bar/mod.py")
-
-    m = astroid.parse("import numpy as np")
-
-    abs_imports = [
-        ("import numpy", ["numpy"]),
-        ("import numpy as np", ["numpy"]),
-        ("import numpy, astroid", ["numpy", "astroid"]),
-        ("import astroid, numpy as np", ["astroid", "numpy"]),
-        #
-        ("from numpy import array", ["numpy/array"]),
-        #
-        ("from baz import mod_two", ["baz/mod_two"]),
-    ]
-
-    for abs_imp in abs_imports:
-        mod_imports: ModuleImports = get_module_imports(
-            module=astroid.parse(abs_imp[0]), module_path=filepath, root=root
-        )
-        assert mod_imports.relative == []
-        assert mod_imports.absolute == [root / a for a in abs_imp[1]]
-
-    rel_imports = [
-        ("from . import some_module", [filepath.parent / "some_module"]),
-        ("from . import filtering", [filepath.parent / "filtering"]),
-    ]
-
-    for rel_imp in rel_imports:
-        mod_imports: ModuleImports = get_module_imports(
-            module=astroid.parse(rel_imp[0]), module_path=filepath, root=root
-        )
-        assert mod_imports.absolute == []
-        assert mod_imports.relative == [a for a in rel_imp[1]], mod_imports.relative
-
-
-def test_moduml_simple():
-
-    # filepaths wrapped in extra layer of strings in order to match dot output
-    modules = [
-        '"test_dir/main.py";',
-        '"test_dir/utils.py";',
-        '"test_dir/package_one/__init__.py";',
-        '"test_dir/package_one/module_one.py";',
-        '"test_dir/package_one/module_two.py";',
-        '"test_dir/package_two/__init__.py";',
-        '"test_dir/package_two/module_one.py";',
-    ]
-
-    imports = [
-        '"test_dir/main.py" -> "test_dir/utils.py";',
-    ]
-
-    root = Path("test_dir")
-
-    dot: pydot.Dot = main(root=root)
-
-    lines = dot.to_string().split("\n")
-    for mod in modules:
-        assert mod in lines, dot.to_string()
-
-    # for imp in imports:
-    #     assert imp in lines, dot.to_string()
+    pass
