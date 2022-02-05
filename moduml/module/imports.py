@@ -247,11 +247,20 @@ def get_module_imports(
     for p in non_qual_import_paths:
         assert not p.suffix, "all non-qualifed paths must not point to a specific file"
 
+    # TODO:
+    # maybe not always assume non_qual_import_path is an external package
+    # e.g. when from a relative import-from: from ..package import module
+
     # only show top-level package name for external imports
     # e.g. "from sklearn.mixtures import GMM" --> sklearn
-    ext_toplevel_imports = [
-        Path(ext.relative_to(project_path).parts[0]) for ext in non_qual_import_paths
-    ]
+    ext_toplevel_imports = []
+    for non_qual in non_qual_import_paths:
+        try:
+            ext_toplevel_imports.append(
+                Path(non_qual.relative_to(project_path).parts[0])
+            )
+        except:  # just treat a non_qual import as an external package
+            ext_toplevel_imports.append(Path(non_qual.parts[0]))
 
     # remove duplicates
     internal_imports = qual_import_paths

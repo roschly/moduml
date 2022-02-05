@@ -174,4 +174,89 @@ def test_import_from_path_try_to_qualify():
 
 
 def test_get_module_imports():
-    pass
+    root = Path("test_dir")
+
+    #
+    # importing from a package; other packages and module in root
+    #
+    module_path = Path("test_dir/package_two/__init__.py")
+
+    inputs_outputs = [
+        ("from package_one import module_one", [root / "package_one/module_one.py"]),
+        (
+            "from package_one import non_existing_module",
+            [root / "package_one/__init__.py"],
+        ),  # default to package/__init__
+        ("from ..package_one import module_one", [root / "package_one/module_one.py"]),
+        ("from ..utils import util_function", [root / "utils.py"]),
+        (
+            "from ..package_one import module_one, module_two",
+            [root / "package_one/module_one.py", root / "package_one/module_two.py"],
+        ),
+    ]
+
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        internal_imports, external_imports = get_module_imports(
+            module_path=module_path, module_ast=m, project_path=root
+        )
+        # TODO: maybe also test for reverse order, or as set, i.e. no order
+        assert internal_imports == outputs or internal_imports == outputs[::-1]
+        assert external_imports == []
+
+    #
+    # importing from a root module; other root module and from packages
+    #
+    module_path = Path("test_dir/main.py")
+
+    inputs_outputs = [
+        ("from package_one import module_one", [root / "package_one/module_one.py"]),
+        (
+            "from package_one import non_existing_module",
+            [root / "package_one/__init__.py"],
+        ),  # default to package/__init__
+        ("from utils import util_function", [root / "utils.py"]),
+    ]
+
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        internal_imports, external_imports = get_module_imports(
+            module_path=module_path, module_ast=m, project_path=root
+        )
+        assert internal_imports == outputs or internal_imports == outputs[::-1]
+        assert external_imports == []
+
+    #
+    # importing external packages
+    #
+    module_path = Path("test_dir/main.py")
+
+    inputs_outputs = [
+        (
+            "import ext_package",
+            [Path("ext_package")],
+        ),  # package does NOT exists locally, i.e. an external import
+        # NOTE: this is probably not desired behavior in the long rung,
+        # i.e. assuming relative unfound packages to be external ones
+        (
+            "from ..non_exisiting_package import module_one",
+            [Path("non_exisiting_package")],
+        ),
+    ]
+
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        internal_imports, external_imports = get_module_imports(
+            module_path=module_path, module_ast=m, project_path=root
+        )
+        assert internal_imports == []
+        assert external_imports == outputs
+
+    # existing package should be internal not external import
+    module_path = Path("test_dir/main.py")
+    m = astroid.parse("import package_two")
+    internal_imports, external_imports = get_module_imports(
+        module_path=module_path, module_ast=m, project_path=root
+    )
+    assert internal_imports != []
+    assert external_imports == []
