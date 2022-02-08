@@ -1,5 +1,6 @@
 # Project specific
 example_code/
+latent_feat/
 .vscode
 
 # Byte-compiled / optimized / DLL files

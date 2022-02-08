@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import astroid
+import pytest
 
 from moduml.module.imports import (
     get_module_imports,
@@ -34,6 +35,11 @@ def test_relative_import_from():
         ),
     ]
 
+    for (inputs, outputs) in inputs_outputs:
+        m = astroid.parse(inputs)
+        import_froms = relative_import_from(module=m, module_path=filepath)
+        assert import_froms == [ImportFromPath(o) for o in outputs]
+
     # TODO:
     # I need the case where there could be a conflict with names in __init__ and
     # names of modules in package
@@ -43,14 +49,11 @@ def test_relative_import_from():
     #   if package/__init__.py contains a variable named bla, that would be imported
     #   if package/bla.py existed, moduml would assume it was imported, but it wouldnt if (see above)
 
-    # TODO: should throw exception when trying to relative import beyond project structure
-    # filepath = Path("foo/bar/mod.py")
-    # ("from .....baz import func", [filepath.parents[1] / "baz/func"]),
-
-    for (inputs, outputs) in inputs_outputs:
-        m = astroid.parse(inputs)
-        import_froms = relative_import_from(module=m, module_path=filepath)
-        assert import_froms == [ImportFromPath(o) for o in outputs]
+    # assert that a relative import beyong top-level results in no import
+    # and program not throwing exception
+    m = astroid.parse("from .....baz import func")
+    import_froms = relative_import_from(module=m, module_path=filepath)
+    import_froms = []
 
     # ensure it doesn't return anythin when given
     # non-relative imports

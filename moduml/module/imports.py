@@ -2,6 +2,7 @@ import pathlib
 from pathlib import Path, PurePath
 from typing import Any, List, Dict, Optional, Tuple, Union
 from functools import singledispatch
+import logging
 
 import astroid
 import networkx as nx
@@ -117,9 +118,16 @@ def _to_rel_importfrom_paths(
             dir1/modname/name2
     """
     assert import_from.level, "level must be present for a relative import"
-    p = module_path.parents[import_from.level - 1] / import_from.modname.replace(
-        ".", "/"
-    )
+    # TODO: handle import issue better than just a warning?
+    try:
+        p = module_path.parents[import_from.level - 1] / import_from.modname.replace(
+            ".", "/"
+        )
+    except IndexError as err:
+        logging.warning(
+            f"Relative import error! Trying to import beyond top-level in file: {module_path}"
+        )
+        return []
     return [ImportFromPath(p / n[0]) for n in import_from.names]
 
 
