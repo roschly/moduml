@@ -10,3 +10,6 @@ from typing import Dict, List, Set
 from .utils import util_function
 from .package_one import function_one
 from .package_one.module_one import function_one
+
+# this should not work
+from .not_package import something

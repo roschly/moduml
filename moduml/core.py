@@ -198,6 +198,12 @@ def main():
     # output as string or image file
     if args.output_file:
         file_ext = args.output_file.split(".")[-1]
-        dot.write(args.output_file, prog="dot", format=file_ext)
+        # dot.write(args.output_file, prog="dot", format=file_ext)
+        # TODO: try calling dot directly, instead of through pydot
+        # https://stackoverflow.com/questions/1494492/graphviz-how-to-go-from-dot-to-a-graph
+        try:
+            dot.write(args.output_file, prog="dot", format=file_ext)
+        except Exception as e:
+            pass
     else:
         print(dot.to_string())
