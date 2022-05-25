@@ -2,6 +2,9 @@ from argparse import Namespace, ArgumentParser, ArgumentTypeError
 from pathlib import Path
 from typing import List, Set
 import logging
+import re
+import subprocess
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import pydot
 import networkx as nx
@@ -147,7 +150,16 @@ def parse_args() -> Namespace:
     return args
 
 
-def main():
+def handle_dot_err_msg(err_msg: str) -> dict:
+    """Handle error messages from graphviz dot program."""
+    lost_edge_pattern = r"Error: lost (.*) (.*) edge"
+    if match := re.findall(lost_edge_pattern, err_msg):
+        return {"error_type": "lost_edge", "result": match}
+    else:
+        return {}
+
+
+def main() -> None:
     args = parse_args()
 
     # must be a directory path, for now
@@ -195,15 +207,32 @@ def main():
         show_imports=args.show_imports,
     )
 
-    # output as string or image file
     if args.output_file:
         file_ext = args.output_file.split(".")[-1]
-        # dot.write(args.output_file, prog="dot", format=file_ext)
-        # TODO: try calling dot directly, instead of through pydot
-        # https://stackoverflow.com/questions/1494492/graphviz-how-to-go-from-dot-to-a-graph
-        try:
-            dot.write(args.output_file, prog="dot", format=file_ext)
-        except Exception as e:
-            pass
+
+        with open("tmp.dot", "w+") as fh:
+            fh.write(dot.to_string())
+
+        cmd = f"dot -Tps tmp.dot -o tmp.png"
+        cp = subprocess.run(cmd.split(" "), capture_output=False)
+        if cp.returncode:
+            err_msg = cp.stderr.decode("utf-8")
+            print(err_msg)
+        # else:
+        #     print(cp.stdout)
+
     else:
         print(dot.to_string())
+
+    # # output as string or image file
+    # if args.output_file:
+    #     file_ext = args.output_file.split(".")[-1]
+    #     # dot.write(args.output_file, prog="dot", format=file_ext)
+    #     # TODO: try calling dot directly, instead of through pydot
+    #     # https://stackoverflow.com/questions/1494492/graphviz-how-to-go-from-dot-to-a-graph
+    #     try:
+    #         dot.write(args.output_file, prog="dot", format=file_ext)
+    #     except Exception as e:
+    #         pass
+    # else:
+    #     print(dot.to_string())
